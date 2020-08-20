@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.calibrate.CalibrateFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/textCalibrationConnected"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Not Connected"
+        android:textAlignment="center"
+        android:textSize="24sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textCalibrationStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Starting calibration..."
+            android:textAlignment="center"
+            android:textSize="24sp" />
+
+        <Button
+            android:id="@+id/buttonCalibrateStop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cancel calibration" />
+    </LinearLayout>
+
+</FrameLayout>

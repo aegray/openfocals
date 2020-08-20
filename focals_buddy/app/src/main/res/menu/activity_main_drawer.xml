@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_features"
+            android:title="Features" />
+
+        <item
+            android:id="@+id/nav_apps"
+            android:title="Apps" />
+
+        <item
+            android:id="@+id/nav_developer_tools"
+            android:title="Developer Tools" />
+
+
+     <!--   <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/menu_home" />
+        <item
+            android:id="@+id/nav_tools"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/menu_tools" />
+        <item
+            android:id="@+id/nav_control"
+            android:title="nav_control" /> -->
+    </group>
+    <item android:title="External Services">
+        <menu>
+            <item
+                android:id="@+id/nav_alexa"
+                android:title="Alexa" />
+        </menu>
+    </item>
+    <item android:title="Setup">
+        <menu>
+            <item
+                android:id="@+id/nav_calibrate"
+                android:title="Calibrate Display" />
+            <!-- <item
+                android:id="@+id/nav_pair_loop"
+                android:title="Pair Loop" /> -->
+            <item
+                android:id="@+id/nav_disconnect"
+                android:title="Disconnect Focals" />
+        </menu>
+    </item>
+<!--
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_menu_share"
+                android:title="@string/menu_share" />
+            <item
+                android:id="@+id/nav_send"
+                android:icon="@drawable/ic_menu_send"
+                android:title="@string/menu_send" />
+        </menu>
+    </item> -->
+
+</menu>

@@ -1,0 +1,508 @@
+
+syntax = "proto2";
+
+package com.openfocals.focals.messages;
+option java_package = "com.openfocals.focals.messages";
+option java_outer_classname = "BTMessages";
+option java_multiple_files = true;
+
+
+// general use
+enum Status {
+    STATUS_OK = 0;
+    STATUS_ERROR = 1;
+}
+
+/////////////// connection startup
+message EstablishConnection {
+    required uint32 versionMajor = 1;
+    required uint32 versionMinor = 2;
+}
+
+
+message EstablishConnectionResponse { }
+
+message Heartbeat { }
+        
+message DateTimeUpdate {
+    required string datetime = 1;
+    required string tz = 2;
+}
+
+        
+///////////// Loop pairing 
+message StartLoopPairing { }
+message UnpairLoop { }
+message LoopConnectionState {
+    enum State {
+        NOT_CONNECTED = 0;
+        CONNECTING = 1;
+        CONNECTED = 2;
+    }
+    required State state = 1;
+}
+            
+
+///////////// Battery
+message FocalsBatteryState {
+    optional int32 focalsBatteryLevel = 1;
+    optional int32 loopBatteryLevel = 2;
+    optional bool charging = 3;
+}
+        
+
+/////////////// Network
+message SocketClose {
+    required int32 id = 1;
+}
+
+
+message SocketCloseResponse {
+    required int32 id = 1;
+    required Status status = 2;
+    optional int32 error = 3;
+}
+
+
+message SocketData {
+    required int32 id = 1;
+}
+
+
+message SocketError {
+    required int32 id = 1;
+    required int32 error = 2;
+
+}
+
+
+message SocketOpen {
+    required int32 id = 1;
+    required string host = 2;
+    optional int32 port = 3;
+}
+
+
+message SocketOpenResponse {
+    required int32 id = 1;
+    required Status status = 2;
+    optional int32 error = 3;
+}
+
+message HostWhois {
+    required string host = 1;
+}
+
+message HostWhoisResponse {
+    required string host = 1;
+    required Status status = 2;
+    optional string address = 3;
+    optional int32 error = 4;
+}
+
+
+////////////////// Notifications
+
+// maps to android.app.Notification.RemoteInput
+message RemoteInput {
+    required string key = 1;
+    required bool allowsFreeForm = 2;
+    required string label = 3;
+    repeated string choices = 4;
+}
+        
+message RemoteInputResult {
+    required string key = 1;
+    required string value = 2;
+}
+        
+message NotificationAction {
+    required string id = 1;
+    required string actionIconFileId = 2;
+    required string title = 3;
+    repeated RemoteInput inputs = 4;
+}
+
+
+message Notification {
+    required string id = 1;
+    required string title = 2;
+    required string text = 3;
+    required string time = 4;
+    optional string iconId = 7;
+    repeated NotificationAction actions = 8;
+    optional string preview = 11;
+}
+
+message NotificationRemove {
+    required string id = 1;
+}
+        
+
+message NotificationPerformAction {
+    required string notificationId = 1;
+    required string actionId = 2;
+    repeated RemoteInputResult inputs = 3;
+}
+
+
+message NotificationResponse {
+    optional NotificationPerformAction performAction = 2;
+}
+
+
+
+////////////////// State
+message SetCloudToken {
+    optional string token = 1;
+}
+            
+message RefreshCloudToken { }
+
+message SetCloudUserId {
+    optional string id = 1;
+}
+
+message State {
+    optional SetCloudToken cloudToken = 1;
+    optional bool networkConnected = 2;
+    optional SetCloudUserId cloudUserId = 3;
+    optional string dummyid = 4;
+    optional bool enableCalendar = 5;
+}
+
+message SetDisplayOffsets {
+    required int32 x = 1;
+    required int32 y = 2;
+}
+
+message DeviceOptions {
+    optional string cloudHost = 1;
+    optional SetDisplayOffsets displayOffsets = 3;
+    optional float volume = 6;
+}
+
+message StateUpdate {
+    optional DeviceOptions options = 1;
+    optional State state = 2;
+}
+
+
+///////////////////// Features
+
+message FeatureSpec {
+    required string id = 1;
+    required string name = 2;
+    required bool enabled = 3;
+    optional string description = 4;
+    optional bool visible = 5;
+    optional bool editable = 6;
+}
+
+message QueryFeatures { }
+message SetFeatures {
+    repeated string id = 1;
+}
+
+message FocalsFeaturesAction {
+    optional QueryFeatures queryFeatures = 1;
+    optional SetFeatures setFeatures = 2;
+}
+
+message QueryFeaturesResponse {
+    optional QueryFeaturesResponseItems featureItems = 1;
+}
+
+message QueryFeaturesResponseItems {
+    repeated FeatureSpec featureSpecs = 1;
+}
+
+////////////////// Programs
+message ProgramInput {
+    required string key = 1;
+    required string value = 2;
+}
+
+message StopProgram {
+    required string name = 1;
+}
+
+message StartProgram {
+    required string name = 1;
+    repeated ProgramInput inputs = 2;
+}
+        
+
+///////////////// Calibration
+message StartCalibration {
+    optional uint32 someintshoudlbe1 = 1;
+}
+
+message StopCalibration {}
+
+message SetCalibrationMode {
+    enum Mode {
+        MODE_MAIN = 3;
+    }
+
+    required Mode mode = 1;
+}
+
+
+message Calibration {
+    optional StartCalibration start = 1;
+    optional StopCalibration stop = 2;
+    optional SetCalibrationMode setMode = 5;
+}
+
+// responses
+message CalibrationStarted {
+    optional uint32 someint = 1;
+}
+
+message CalibrationStopped {
+    enum Result {
+        SUCCEEDED = 1;
+        FAILED = 2;
+        CANCELED = 3;
+    }
+    optional Result result = 1;
+}
+
+message CalibrationResponse {
+    optional CalibrationStarted started = 1;
+    optional CalibrationStopped stopped = 2;
+}
+       
+
+////////////////// Alexa
+// See: https://developer.amazon.com/en-US/docs/alexa/alexa-voice-service/authorize-companion-app.html
+message AlexaAuthInfoRequest {
+    required string name = 1;
+}
+       
+message AlexaAuthInfoResponse {
+    required string name = 1;
+    optional string productId = 2;
+    optional string dsn = 3;
+    optional string codeChallenge = 4;
+}
+
+message AlexaUser {
+    optional string name = 1;
+    optional string email = 2;
+}
+
+        
+message AlexaDoAuthorizeRequest {
+    required string name = 1;
+    optional string authorizationCode = 2;
+    optional string redirectUri = 3;
+    optional string clientId = 4;
+    optional AlexaUser user = 5;
+}
+
+message AlexaDoAuthorizeResponse {
+    required string name = 1;
+    required Status result = 2;
+}
+        
+message AlexaDeauthorizeRequest {
+    required string name = 1;
+}
+
+message AlexaAuthState {
+    required string name = 1;
+    required bool authorized = 2;
+    optional AlexaUser user = 3;
+}
+
+message AlexaAuthUpdateRequest {
+    required string name = 1;
+}
+
+message AlexaAuthUpdateResponse {
+    required string name = 1;
+    required string token = 2;
+    required string refreshToken = 3;
+    optional Status result = 4;
+}
+
+message AlexaAuthActionToFocals {
+    optional AlexaAuthInfoRequest authInfo = 1;
+    optional AlexaDoAuthorizeRequest authorize = 2;
+    optional AlexaDeauthorizeRequest deauthorize = 3;
+    optional AlexaAuthUpdateResponse authUpdate = 4;
+}
+        
+message AlexaAuthActionToBuddy {
+    optional AlexaAuthInfoResponse authInfo = 1;
+    optional AlexaDoAuthorizeResponse authorize = 2;
+    optional AlexaAuthState state = 3;
+    optional AlexaAuthUpdateRequest authUpdate = 4;
+}
+        
+
+//////////////// Location
+message LocationData {
+    required double latitude = 1;
+    required double longitude = 2;
+}
+
+message LocationUpdate {
+    enum LocationStatus {
+        OK = 0;
+        UNK_FAIL1 = 1;
+        UNK_FAIL2 = 2;
+    }
+    required LocationStatus status = 1;
+    optional LocationData data = 2;
+}
+
+message Location {
+    optional LocationUpdate data = 1;
+}
+
+
+
+////////////////////// Files
+
+/// bundles
+message FileTransferResponse {
+    optional FileTransferStartResponse fileTransfer = 1;
+    optional FileDataResponse fileData = 2;
+}
+
+message FileTransferRequest {
+    optional FileTransferStart startFileTransfer = 1;
+    optional FileTransferStop stopFileTransfer = 2;
+    optional FileDataRequest fileData = 3;
+}
+
+
+enum FileTransferStatus {
+    FileTransferStatus_OK = 0;
+    FileTransferStatus_INVALID = 1;
+    FileTransferStatus_ERROR = 2;
+}
+
+// initiate
+message FileTransferStart {
+    required string id = 1;
+}
+
+message FileTransferStartResponse {
+    required string id = 1;
+    required FileTransferStatus status = 2;
+    optional uint32 length = 3;
+    optional uint32 checksum = 4;
+}
+
+// stop
+message FileTransferStop {
+    required string id = 1;
+}
+
+
+
+// data req/resp
+message FileDataRequest {
+    required string id = 1;
+    required uint32 offset = 2;
+    required uint32 length = 3;
+}
+        
+        
+message FileDataResponse {
+    required string id = 1;
+    required FileTransferStatus status = 2;
+    required uint32 offset = 3;
+    optional uint32 checksum = 4;
+}
+
+
+    
+
+////////// update
+message SoftwareUpdateCancel { }
+
+message SoftwareUpdateStart {
+    required string id = 1;
+    required string version = 2;
+    optional string minFromVersion = 3;
+}
+
+message SoftwareUpdate {
+    optional SoftwareUpdateStart start = 1;
+    optional SoftwareUpdateCancel cancel = 2;
+}
+       
+
+message SoftwareUpdateState {
+    enum Status {
+        READY = 0;
+        STARTING = 1;
+        ERROR = 2;
+        CANCELLED = 3;
+    }
+
+    required string id = 1;
+    required Status status = 2;
+}
+        
+
+message SoftwareUpdateResponse {
+    optional SoftwareUpdateState state = 1;
+}
+
+
+
+
+////////////////// Composites
+message BTMessageToFocals {
+    optional EstablishConnection establishConnection = 1;
+    optional SocketOpenResponse socketOpenResponse = 2;
+    optional SocketCloseResponse socketCloseResponse = 3;
+    optional SocketData socketData = 4;
+    optional Notification notification = 6;
+    optional DateTimeUpdate datetime = 8;
+    optional StartLoopPairing startLoopPairing = 10;
+    optional UnpairLoop unpairLoop = 12;
+    optional NotificationRemove notificationRemove = 16;
+    optional HostWhoisResponse hostWhoisResponse = 18;
+    optional SocketError socketError = 19;
+    optional StateUpdate stateUpdate = 20;
+    optional DeviceOptions deviceOptions = 25;
+
+    optional State state = 26;
+
+    optional StartProgram startProgram = 27;
+    optional StopProgram stopProgram = 28;
+    optional FileTransferResponse fileTransfer = 29;
+    optional SoftwareUpdate softwareUpdate = 30;
+    optional Location location = 34;
+    optional Calibration calibration = 35;
+    optional FocalsFeaturesAction featuresAction = 39;
+    optional AlexaAuthActionToFocals alexaAuth = 40;
+}
+
+message BTMessageToBuddy {
+    optional EstablishConnectionResponse establishConnectionResponse = 1;
+    optional SocketOpen socketOpen = 2;
+    optional SocketClose socketClose = 3;
+    optional SocketData socketData = 4;
+    optional NotificationRemove notificationDismiss = 6;
+    optional LoopConnectionState loopState = 7;
+    optional HostWhois hostWhois = 10;
+    optional SocketError socketError = 11;
+    optional FocalsBatteryState batteryState = 12;
+    optional RefreshCloudToken refreshCloudToken = 14;
+    optional FileTransferRequest fileTransfer = 16;
+    optional SoftwareUpdateResponse softwareUpdate = 17;
+    optional Heartbeat heartbeat = 20;
+    optional CalibrationResponse calibration = 22;
+    optional QueryFeaturesResponse features = 26;
+    optional NotificationResponse notificationResponse = 29;
+    optional AlexaAuthActionToBuddy alexaAuth = 27;
+}
+

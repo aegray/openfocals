@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.devtools.DeveloperToolsFragment"> -->
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/textDevtoolsConnected"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:text="Not connected"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        tools:text="Not connected" />
+
+    <!-- android:layout_above="@+id/layoutDevToolsLin" -->
+
+    <LinearLayout
+        android:id="@+id/layoutDevToolsLin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/textDevtoolsConnected"
+        android:layout_alignTop="@id/textDevtoolsConnected"
+        android:layout_marginTop="60dp"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/buttonGenNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Generate Test Notification" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonScreencastStart"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Start Screencast to 192.168.1.6" />
+
+            <Button
+                android:id="@+id/buttonScreencastStop"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Stop Screencast" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonUnpairLoop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unpair Loop" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonAdjustDisplayOffsets"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Set Display Offsets X/Y:" />
+
+            <EditText
+                android:id="@+id/editTextDisplayOffsetX"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="1"
+                android:inputType="number"
+                android:text="0"
+                android:textAlignment="center" />
+
+            <EditText
+                android:id="@+id/editTextDisplayOffsetY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="1"
+                android:inputType="number"
+                android:text="0"
+                android:textAlignment="center" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonNetworkEnable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Enable Network" />
+
+            <Button
+                android:id="@+id/buttonNetworkDisable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Disable Network" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonForgetCurrentDevice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Forget Current Focals" />
+
+        <Button
+            android:id="@+id/buttonDownloadUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Download Update from 192.168.1.6" />
+
+        <Button
+            android:id="@+id/buttonSendUpdateToFocals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send update to focals" />
+
+    </LinearLayout>
+
+</RelativeLayout>

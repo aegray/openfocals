@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textAppsConnected"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:text="Not connected"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        tools:text="Not connected" />
+
+    <ListView
+        android:id="@+id/listApps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonAppsApply"
+        android:requiresFadingEdge="vertical"
+        tools:listitem="@layout/features_list_item" >
+    </ListView>
+
+    <!-- android:layout_alignTop="@+id/listFeatures" -->
+
+    <Button
+        android:id="@+id/buttonAppsApply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Apply and Restart" />
+
+</RelativeLayout>

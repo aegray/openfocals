@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@id/nav_control">
+
+
+    <fragment
+        android:id="@+id/nav_control"
+        android:name="com.openfocals.buddy.ui.main.ControlFragment"
+        android:label="Connection"
+        tools:layout="@layout/control_fragment" />
+
+    <fragment
+        android:id="@+id/nav_features"
+        android:name="com.openfocals.buddy.ui.features.FeaturesFragment"
+        android:label="Features"
+        tools:layout="@layout/features_fragment" />
+
+    <fragment
+        android:id="@+id/nav_apps"
+        android:name="com.openfocals.buddy.ui.apps.AppsFragment"
+        android:label="Apps"
+        tools:layout="@layout/fragment_apps" />
+
+    <fragment
+        android:id="@+id/nav_developer_tools"
+        android:name="com.openfocals.buddy.ui.devtools.DeveloperToolsFragment"
+        android:label="Developer tools"
+        tools:layout="@layout/fragment_developer_tools" />
+
+    <fragment
+        android:id="@+id/nav_calibrate"
+        android:name="com.openfocals.buddy.ui.calibrate.CalibrateFragment"
+        android:label="Calibration"
+        tools:layout="@layout/fragment_calibrate" />
+
+    <fragment
+        android:id="@+id/nav_alexa"
+        android:name="com.openfocals.buddy.ui.alexa.AlexaAuthFragment"
+        android:label="Alexa"
+        tools:layout="@layout/fragment_alexa_auth" />
+
+</navigation>
