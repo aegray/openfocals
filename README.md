@@ -1,6 +1,6 @@
 # openfocals
 
-Replacement app for Android for Focals (originally by North)
+Replacement Android app for Focals smart glasses (originally by North)
 
 
 # Setup
