@@ -33,8 +33,7 @@ because it requires manually downloading some large model files - feel free to d
 
 For building, I've taken out my amazon api key (used for authenticating alexa), ssl 
 certificates and private keys (used for intercepting cloud traffic), and a keystore file, 
-which means by default some features will not work (you may have to remove references to the 
-keystore file form build.gradle to get things to build).
+which means by default some features will not work.
 
 I'll add build directions and information soon on how to provide this for yourself...
 
