@@ -109,27 +109,34 @@ public class NotificationSender {
                         NotificationAction.Builder na = NotificationAction.newBuilder();
                         na.setId(Integer.toString(i));
                         //na.setActionIconFileId("");
-                        na.setTitle(ni.actions.get(i).title.toString());
+                        String atitle = ni.actions.get(i).title.toString();
+                        if (atitle == null) title = "";
+                        na.setTitle(atitle);
                         android.app.RemoteInput[] ris = ni.actions.get(i).getRemoteInputs();
                         if ((ris != null) && (ris.length > 0)) {
                             List<RemoteInput> remotes = new ArrayList<>();
                             for (int j = 0; j < ris.length; ++j) {
                                 RemoteInput.Builder rib = RemoteInput.newBuilder();
-                                rib.setKey(ris[j].getResultKey());
-                                rib.setLabel(ris[j].getLabel().toString());
+                                String reskey = ris[j].getResultKey();
+                                String reslabel = ris[j].getLabel().toString();
+                                rib.setKey(reskey == null ? "" : reskey);
+                                rib.setLabel(reslabel == null ? "" : reslabel);
                                 rib.setAllowsFreeForm(ris[j].getAllowFreeFormInput());
 
                                 CharSequence[] choices = ris[j].getChoices();
                                 if ((choices != null) && (choices.length > 0)) {
                                     List<String> schoices = new ArrayList<>();
                                     for (int m = 0; m < choices.length; ++m) {
-                                        schoices.add(choices[m].toString());
+                                        String schoice = choices[m].toString();
+                                        if (schoice != null)
+                                            schoices.add(choices[m].toString());
                                     }
                                     rib.addAllChoices(schoices);
                                 }
                                 remotes.add(rib.build());
                             }
-                            na.addAllInputs(remotes);
+                            if (!remotes.isEmpty())
+                                na.addAllInputs(remotes);
                         }
                         focals_actions.add(na.build());
                     }

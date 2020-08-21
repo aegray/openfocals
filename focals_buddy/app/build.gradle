@@ -5,7 +5,20 @@ apply plugin: 'com.google.protobuf'
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
-
+    signingConfigs {
+        debug {
+            storeFile file('../bysouth.com.jks')
+            storePassword var
+            keyAlias = '1'
+            keyPassword 'password'
+        }
+        release {
+            storeFile file('../bysouth.com.jks')
+            storePassword var
+            keyAlias = '1'
+            keyPassword 'password'
+        }
+    }
     sourceSets {
         main {
             proto {
@@ -21,11 +34,12 @@ android {
 
     defaultConfig {
         applicationId "com.openfocals.buddy"
-        minSdkVersion 26
+        minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        setProperty("archivesBaseName", "openfocals")
     }
     buildTypes {
         release {
@@ -52,7 +66,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
     implementation 'com.google.protobuf:protobuf-lite:3.0.0'

@@ -28,9 +28,27 @@
             android:label="@string/title_activity_discover"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity
+            android:name="com.amazon.identity.auth.device.authorization.AuthorizationActivity"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:allowTaskReparenting="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="${applicationId}"
+                    android:scheme="amzn" />
+            </intent-filter>
+        </activity>
+
+
+
         <service
             android:name="com.openfocals.services.notifications.NotificationService"
-            android:label="notifications"
+            android:label="openfocals_notifications"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />

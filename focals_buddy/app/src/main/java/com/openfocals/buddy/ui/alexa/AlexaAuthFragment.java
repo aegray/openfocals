@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amazon.identity.auth.device.api.Listener;
 import com.amazon.identity.auth.device.api.authorization.User;
 import com.openfocals.buddy.FocalsBuddyApplication;
 import com.openfocals.buddy.R;
@@ -60,6 +61,9 @@ public class AlexaAuthFragment extends Fragment {
     TextView text_status_;
     Button button_deauth_;
 
+    boolean need_wait_deauth_ = false;
+    boolean should_quit_ = false;
+
     boolean got_focals_info_ = false;
     AlexaAuthInfoResponse focals_info_;
     AuthorizeListenerImpl auth_listener_ = new AuthorizeListenerImpl();
@@ -90,6 +94,7 @@ public class AlexaAuthFragment extends Fragment {
                         );
                 } else {
                     device_.alexaDoAuthorize(authorizationCode, redirectUri, clientId, null);
+
                 }
             }
         }
@@ -120,6 +125,17 @@ public class AlexaAuthFragment extends Fragment {
             public void onClick(View v) {
                 if (AlexaAuthState.getInstance().isAuthenticated()) {
                     device_.alexaDeauthorize();
+                    AuthorizationManager.signOut(getContext(), new Listener<Void, AuthError>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.e(TAG, "Successfully logged out alexa");
+                        }
+
+                        @Override
+                        public void onError(AuthError authError) {
+                            Log.e(TAG, "Error logging out alexa");
+                        }
+                    });
                     quit("Alexa was disabled");
                 } else {
                     startProcess();

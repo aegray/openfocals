@@ -286,7 +286,7 @@ public class Device {
                         Log.i(TAG, "Connected");
                     } else {
                         Log.e(TAG, "COULD NOT CONNECT");
-                        Device.this.onBluetoothDisconnected();
+                        Device.this.onBluetoothConnectionFailed();
                     }
                 }
             };
@@ -313,6 +313,10 @@ public class Device {
         established_ = false;
 
         getEventBus().post(new FocalsConnectionFailedEvent());
+
+        if (started_) {
+            connect();
+        }
     }
 
     private void onBluetoothDisconnected() {

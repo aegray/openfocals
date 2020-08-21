@@ -54,6 +54,7 @@ public class ConnectActivity extends AppCompatActivity {
     Handler handler_label_ = new Handler();
 
     TextView text_;
+    TextView text_help_;
 
 
     boolean discovering_ = false;
@@ -163,6 +164,8 @@ public class ConnectActivity extends AppCompatActivity {
         });
 
         text_ = findViewById(R.id.textDiscoveryStatus);
+        text_help_ = findViewById(R.id.textInfoConnectTrouble);
+        text_help_.setVisibility(View.INVISIBLE);
     }
 
     private final Runnable timeout_handler = new Runnable() {
@@ -328,9 +331,17 @@ public class ConnectActivity extends AppCompatActivity {
     public void onFocalsConnectionFailed(FocalsConnectionFailedEvent e) {
         Log.i(TAG, "ConnectActivity::onFocalsConnectionFailed");
         connect_failure_count_ += 1;
+        if (connect_failure_count_ >= 2) {
+            Log.i(TAG, "Showing connect help: failure_count=" + connect_failure_count_);
+            text_help_.setVisibility(View.VISIBLE);
+        }
         if (connect_failure_count_ > LIMIT_CONNECT_FAILURES) {
+            Log.i(TAG, "Restarting discovery - too many failures: failure_count=" + connect_failure_count_);
             stopConnecting();
             startDiscovery();
+        } else {
+            Log.i(TAG, "Connect failed - retrying: failure_count=" + connect_failure_count_);
+
         }
     }
 
