@@ -124,9 +124,7 @@ Not currently planning to implement, but open to requests (I can also provide in
 
 
 
-Still need to figure out a way to get device modifications without requiring a connector cable, at 
-which point we can add in dynamic app support and more features.
-
+Still researching how to get apps onto the glasses without requiring a connector cable and jumping through a lot of hoops - if anyone with intimate android/aosp knowledge or arm based reverse engineering experience (especially c++) wants to help out, please reach out. 
 
 
 
