@@ -3,10 +3,6 @@
 Replacement Android app for Focals smart glasses (originally by North)
 
 
-I've only tested this on two Android devices - so please let me know what works + doesn't for you.
-
-
-
 # Setup
 
 I generally keep the latest build at http://www.aegray.com/openfocals/openfocals.apk - you can 
