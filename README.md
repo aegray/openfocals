@@ -8,6 +8,8 @@ Replacement Android app for Focals smart glasses (originally by North)
 I generally keep the latest build at http://www.aegray.com/openfocals/openfocals.apk - you can 
 download this to your phone and install it manually.
 
+You'll have to disconnect your glasses in the North app before using this - by going to Menu->Device Information and clicking Disconnect
+
 After setup, open the app, approve its permission requests (see the note on this next), and click
 connect to connect to your focals.
 
