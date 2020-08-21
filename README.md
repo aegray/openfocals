@@ -31,7 +31,14 @@ through the presentation provider.  This by default will not work even if you en
 because it requires manually downloading some large model files - feel free to deny this permission.
 
 
-# Notes / Compatability
+# Issues / Notes / Compatability
+
+Please try it out and let me know if you have any issues - ideally report them through the 
+github issue tracker.  This has only been tested on two phones, so I wouldn't be surprised 
+if there are problems I haven't seen in my limited testing.
+
+
+Known issues:
 
 * Music/media control only works on sdk 26 (Android 8.0 / Oreo) or above.
 
