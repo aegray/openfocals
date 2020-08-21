@@ -165,7 +165,7 @@ public class ConnectActivity extends AppCompatActivity {
 
         text_ = findViewById(R.id.textDiscoveryStatus);
         text_help_ = findViewById(R.id.textInfoConnectTrouble);
-        text_help_.setVisibility(View.INVISIBLE);
+        text_help_.setVisibility(View.VISIBLE);
     }
 
     private final Runnable timeout_handler = new Runnable() {
