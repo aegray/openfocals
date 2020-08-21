@@ -3,6 +3,10 @@
 Replacement Android app for Focals smart glasses (originally by North)
 
 
+I've only tested this on two Android devices - so please let me know what works + doesn't for you.
+
+
+
 # Setup
 
 I generally keep the latest build at http://www.aegray.com/openfocals/openfocals.apk - you can 
@@ -43,7 +47,7 @@ blank screen from amazon's login library
 
 For building, I've taken out my amazon api key (used for authenticating alexa), ssl 
 certificates and private keys (used for intercepting cloud traffic), and a keystore file, 
-which means by default some features will not work.
+which means by default some features will not work if you build yourself.
 
 I'll add build directions and information soon on how to provide this for yourself...
 
