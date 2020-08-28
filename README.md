@@ -204,3 +204,31 @@ Similar to the above - make sure to enable tasks in the feature section of the a
 
 
 
+## Apps / App manager
+
+If you have a connector cable and have installed app_manager, it will query the openfocals app
+every 30 seconds for a list of the installed and enabled apps.  If that list changes from what it 
+last saw, it will restart itself and reload the lastest list of applications, creating a lens in 
+the gallery for each one.  
+
+Each "app" is a qml (or multiple qml files).  You can register additional apps in onCreate of 
+
+focals_buddy/app/src/main/java/com/openfocals/services/DeviceService.java 
+
+with:
+
+apps.registerApplication(name, description, qmldata);
+
+There is a utiltiy function to read data from a resource file in res/raw, so in general, you 
+can put a qml file in the res/raw folder then register the app with something like:
+
+apps.registerApplication("2048", "game: 2048", CustomFocalsAppService.readRawTextFile(this, R.raw.game_2048);
+
+Apps lenses can be enabled or disabled through the apps fragment.
+
+Currently the only registered app is the 2048 game.
+
+Installing onto the glasses is more involved and I'll post instructions in the future about this
+
+
+
