@@ -19,6 +19,7 @@ import com.openfocals.services.location.LocationService;
 import com.openfocals.services.media.MediaPlaybackService;
 import com.openfocals.services.network.InterceptedSSLPassthroughProxy;
 import com.openfocals.services.network.InterceptedSSLSessionLogger;
+import com.openfocals.services.network.ScreenMirrorWSService;
 import com.openfocals.services.network.cloudintercept.CloudMockService;
 import com.openfocals.services.network.NetConnectedService;
 import com.openfocals.services.network.NetworkService;
@@ -31,6 +32,7 @@ import com.openfocals.services.network.present.PresentationInterceptService;
 import com.openfocals.services.network.present.providers.AudioSubtitlePresentationProvider;
 import com.openfocals.services.network.present.providers.StreamingTextPresentationProvider;
 import com.openfocals.services.notifications.NotificationSender;
+import com.openfocals.services.screenmirror.ScreenFrameListener;
 import com.openfocals.services.update.SoftwareUpdateService;
 
 import java.util.concurrent.Executor;
@@ -55,13 +57,17 @@ public class DeviceService extends Service {
     MediaPlaybackService media;
     FileTransferService files;
     SoftwareUpdateService update;
+    ScreenMirrorWSService screen_net_service;
+
+    public ScreenFrameListener screenListener;
 
 
 
-    //static DeviceService instance;
+
+    static DeviceService instance;
 
     public static Device getDevice() { return device; }
-    //public static DeviceService getInstance() { return instance; }
+    public static DeviceService getInstance() { return instance; }
 
 
     private final IBinder binder = new DeviceServiceBinder();
@@ -95,6 +101,9 @@ public class DeviceService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        instance = this;
+
         Log.i(TAG, "Service onCreate");
 
         executor = Executors.newSingleThreadExecutor();
@@ -109,6 +118,9 @@ public class DeviceService extends Service {
         media = new MediaPlaybackService(this);
         files = new FileTransferService(this, device);
         update = new SoftwareUpdateService(device);
+
+        screen_net_service = new ScreenMirrorWSService();
+
 
 
 
@@ -125,11 +137,13 @@ public class DeviceService extends Service {
         // http app.ofocals.com
         apps.register(network.interceptedNetworkServices());
         apps.registerApplication("2048", "game: 2048", CustomFocalsAppService.readRawTextFile(this, R.raw.game_2048));
+        apps.registerApplication("ImgDisplay", "Image displayer", CustomFocalsAppService.readRawTextFile(this, R.raw.imgdisplay));
 
         presentation.register(network.interceptedNetworkServices());
         presentation.registerPresentationProvider("AAA", new StreamingTextPresentationProvider());
         presentation.registerPresentationProvider("BAA", new AudioSubtitlePresentationProvider(this));
 
+        screen_net_service.register(network.interceptedNetworkServices());
 
 
         //network.interceptedNetworkServices().registerRemapping("bynorth.com", "192.168.1.6");

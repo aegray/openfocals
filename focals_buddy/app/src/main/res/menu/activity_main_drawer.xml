@@ -16,6 +16,10 @@
             android:id="@+id/nav_developer_tools"
             android:title="Developer Tools" />
 
+        <item
+            android:id="@+id/nav_screen_mirror"
+            android:title="Screen Mirroring" />
+
 
      <!--   <item
             android:id="@+id/nav_home"

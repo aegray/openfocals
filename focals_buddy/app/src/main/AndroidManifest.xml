@@ -5,11 +5,13 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <protected-broadcast android:name="com.samsung.intent.action.MEDIA_PROJECTION_PERMISSION" />
     <application
         android:name=".FocalsBuddyApplication"
         android:allowBackup="true"
@@ -53,6 +55,13 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
+        </service>
+        <service
+            android:name="com.openfocals.services.ScreenRecorderService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"
+            >
         </service>
         <service android:name="com.openfocals.services.DeviceService" />
         <meta-data android:name="AmazonAPIKey" android:value="@string/amazon_api_key"/>

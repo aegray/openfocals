@@ -87,6 +87,8 @@ Feature todo list:
 
 [x] File transfer to focals (for icons, media)
 
+[x] Phone screen mirroring to glasses screen (requires installing software to glasses, basic + hardcoded subsection of screen for youtube currently)
+
 [-] Weather (mocked up - returning fixed values, no integration with external services yet)
 
 [-] Todos (api is there with mocked data, no integration with external services yet)

@@ -29,6 +29,11 @@
         android:name="com.openfocals.buddy.ui.devtools.DeveloperToolsFragment"
         android:label="Developer tools"
         tools:layout="@layout/fragment_developer_tools" />
+    <fragment
+        android:id="@+id/nav_screen_mirror"
+        android:name="com.openfocals.buddy.ui.screenmirror.ScreenMirrorFragment"
+        android:label="Screen Mirroring"
+        tools:layout="@layout/fragment_screen_mirror" />
 
     <fragment
         android:id="@+id/nav_calibrate"

@@ -203,11 +203,11 @@ public class Device {
 
 
     private void sendMessageInternal(BTMessageToFocals msg, Buffer buf) {
-        String str = "";
-        if (buf != null && buf.size() > 0) {
-            str = str + " payload=(hash=" + (buf.hmacSha1(ByteString.of((byte)'a'))) + ", size=" + buf.size() + ")";
-        }
-        Log.i(TAG, "Sent msg: " + str + " : " + msg.toString().replace('\n', ' '));
+        //String str = "";
+        //if (buf != null && buf.size() > 0) {
+        //    str = str + " payload=(hash=" + (buf.hmacSha1(ByteString.of((byte)'a'))) + ", size=" + buf.size() + ")";
+        //}
+        //Log.i(TAG, "Sent msg: " + str + " : " + msg.toString().replace('\n', ' '));
         try {
             Buffer b2 = new Buffer();
 

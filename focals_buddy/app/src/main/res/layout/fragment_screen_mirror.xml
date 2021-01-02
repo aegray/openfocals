@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="MergeRootFrame" >
+
+    <ToggleButton
+        android:id="@+id/record_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="ToggleButton" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/record_button"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:text="start/stop screen recording.\nNote!! Screen recording keeps running\neven if you stop Activity\nuntil you explicitly stop\n"
+        android:textColor="#ffff0000"
+        android:textSize="24sp" />
+
+    <ToggleButton
+        android:id="@+id/pause_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/record_button"
+        android:layout_below="@+id/record_button"
+        android:text="ToggleButton"
+        android:textOff="PAUSE"
+        android:textOn="RESUME" />
+</RelativeLayout>

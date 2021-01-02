@@ -1,5 +1,6 @@
 package com.openfocals.buddy;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -11,6 +12,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.core.view.GravityCompat;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DrawerLayout drawer_;
     NavigationView navview_;
     NavController navcontrol_;
+    Fragment ar_receiver_fragment_;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,5 +188,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onFocalsDisconnected(FocalsDisconnectedEvent e) {
         updateConnected();
+    }
+
+
+    public void setActivityResultReceiverFragment(Fragment f)
+    {
+        ar_receiver_fragment_ = f;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (ar_receiver_fragment_ != null)
+            ar_receiver_fragment_.onActivityResult(requestCode, resultCode, data);
+
     }
 }
