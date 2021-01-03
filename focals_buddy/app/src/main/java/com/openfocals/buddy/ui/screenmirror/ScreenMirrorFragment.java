@@ -11,65 +11,39 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.openfocals.buddy.FocalsBuddyApplication;
 import com.openfocals.buddy.MainActivity;
 import com.openfocals.buddy.R;
-import com.openfocals.focals.Device;
-import com.openfocals.focals.events.FocalsBluetoothMessageEvent;
-import com.openfocals.focals.events.FocalsConnectedEvent;
-import com.openfocals.focals.events.FocalsDisconnectedEvent;
-import com.openfocals.focals.messages.CalibrationResponse;
 import com.openfocals.services.ScreenRecorderService;
 
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class ScreenMirrorFragment extends Fragment {
     private static final String TAG = "FOCALS_SCREEN_MIRROR";
-    private static final int INTERVAL_SIZE_MS = 1000;
     private static final int REQUEST_CODE_SCREEN_CAPTURE = 1;
 
-    //Device device_;
-
-    //TextView text_connected_;
-    //TextView text_status_;
-    //List<Button> conditional_buttons_ = new ArrayList<>();
-
-    //boolean starting_ = true;
-    //int counter_ = 0;
 
     private ToggleButton mRecordButton;
-    private ToggleButton mPauseButton;
     private MyBroadcastReceiver mReceiver;
 
 
 
     public ScreenMirrorFragment() {
-        // Required empty public constructor
-        mReceiver = new MyBroadcastReceiver(this); //getActivity()); //(MainActivity)getActivity().this); //this);
+        mReceiver = new MyBroadcastReceiver(this);
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_screen_mirror, container, false);
     }
 
@@ -80,23 +54,7 @@ public class ScreenMirrorFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mRecordButton = (ToggleButton)view.findViewById(R.id.record_button);
-        mPauseButton = (ToggleButton)view.findViewById(R.id.pause_button);
-        updateRecording(false, false);
-        //if (mReceiver == null) {
-        //    mReceiver = new MyBroadcastReceiver(this); //getActivity()); //(MainActivity)getActivity().this); //this);
-        //}
-
-//
-//        addButton(R.id.buttonCalibrateStop, new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                device_.calibrationStop();
-//                getActivity().getSupportFragmentManager().popBackStack();
-//            }
-//        });
-//
-//
-//        updateEnabled();
+        updateRecording(false);
     }
 
     private static final class MyBroadcastReceiver extends BroadcastReceiver {
@@ -110,10 +68,9 @@ public class ScreenMirrorFragment extends Fragment {
             final String action = intent.getAction();
             if (ScreenRecorderService.ACTION_QUERY_STATUS_RESULT.equals(action)) {
                 final boolean isRecording = intent.getBooleanExtra(ScreenRecorderService.EXTRA_QUERY_RESULT_RECORDING, false);
-                final boolean isPausing = intent.getBooleanExtra(ScreenRecorderService.EXTRA_QUERY_RESULT_PAUSING, false);
                 final ScreenMirrorFragment parent = mWeakParent.get();
                 if (parent != null) {
-                    parent.updateRecording(isRecording, isPausing);
+                    parent.updateRecording(isRecording);
                 }
             }
         }
@@ -122,15 +79,12 @@ public class ScreenMirrorFragment extends Fragment {
 
     @Override
     public void onStart() {
-        //super.onResume();
         super.onStart();
         ((MainActivity)getActivity()).setActivityResultReceiverFragment(this);
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ScreenRecorderService.ACTION_QUERY_STATUS_RESULT);
         getContext().registerReceiver(mReceiver, intentFilter);
         queryRecordingStatus();
-        //getActivity().getSupportFragmentManager().popBackStack();
-
     }
 
 
@@ -139,6 +93,10 @@ public class ScreenMirrorFragment extends Fragment {
         super.onPause();
         ((MainActivity)getActivity()).setActivityResultReceiverFragment(null);
 
+        // Really unclear on what's going wrong here, but I get an exception about
+        // trying to unregistered a receiver that wasn't registered if i leave this in -
+        // which is weird given that it's definitely registered...
+        // I suspect I'm leaking this
         //getContext().unregisterReceiver(mReceiver);
     }
 
@@ -156,16 +114,12 @@ public class ScreenMirrorFragment extends Fragment {
         getContext().startService(intent);
     }
 
-    private void updateRecording(final boolean isRecording, final boolean isPausing) {
+    private void updateRecording(final boolean isRecording) {
         mRecordButton.setOnCheckedChangeListener(null);
-        mPauseButton.setOnCheckedChangeListener(null);
         try {
             mRecordButton.setChecked(isRecording);
-            mPauseButton.setEnabled(isRecording);
-            mPauseButton.setChecked(isPausing);
         } finally {
             mRecordButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
-            mPauseButton.setOnCheckedChangeListener(mOnCheckedChangeListener);
         }
     }
 
@@ -194,17 +148,6 @@ public class ScreenMirrorFragment extends Fragment {
                     } else {
                         final Intent intent = new Intent(((MainActivity)getActivity()), ScreenRecorderService.class);
                         intent.setAction(ScreenRecorderService.ACTION_STOP);
-                        getContext().startService(intent);
-                    }
-                    break;
-                case R.id.pause_button:
-                    if (isChecked) {
-                        final Intent intent = new Intent(((MainActivity)getActivity()), ScreenRecorderService.class);
-                        intent.setAction(ScreenRecorderService.ACTION_PAUSE);
-                        getContext().startService(intent);
-                    } else {
-                        final Intent intent = new Intent(((MainActivity)getActivity()), ScreenRecorderService.class);
-                        intent.setAction(ScreenRecorderService.ACTION_RESUME);
                         getContext().startService(intent);
                     }
                     break;

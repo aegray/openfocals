@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
@@ -58,6 +59,9 @@ public class DeviceService extends Service {
     FileTransferService files;
     SoftwareUpdateService update;
     ScreenMirrorWSService screen_net_service;
+
+
+    public Rect screen_cap_rect;
 
     public ScreenFrameListener screenListener;
 
@@ -137,7 +141,7 @@ public class DeviceService extends Service {
         // http app.ofocals.com
         apps.register(network.interceptedNetworkServices());
         apps.registerApplication("2048", "game: 2048", CustomFocalsAppService.readRawTextFile(this, R.raw.game_2048));
-        apps.registerApplication("ImgDisplay", "Image displayer", CustomFocalsAppService.readRawTextFile(this, R.raw.imgdisplay));
+//        apps.registerApplication("ImgDisplay", "Image displayer", CustomFocalsAppService.readRawTextFile(this, R.raw.imgdisplay));
 
         presentation.register(network.interceptedNetworkServices());
         presentation.registerPresentationProvider("AAA", new StreamingTextPresentationProvider());

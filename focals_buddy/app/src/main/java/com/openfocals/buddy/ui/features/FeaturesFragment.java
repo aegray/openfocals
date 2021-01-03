@@ -137,7 +137,7 @@ public class FeaturesFragment extends Fragment {
                 }
             });
 
-            boolean use_enabled = (feature.getEditable()) ? enabled : false;
+            boolean use_enabled = true; //(feature.getEditable()) ? enabled : false;
             if (!check_hidden_feats_.isChecked()) {
                 use_enabled &= feature.getVisible();
             }

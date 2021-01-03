@@ -87,7 +87,9 @@ Feature todo list:
 
 [x] File transfer to focals (for icons, media)
 
-[x] Phone screen mirroring to glasses screen (requires installing software to glasses, basic + hardcoded subsection of screen for youtube currently)
+[x] Phone screen mirroring to glasses screen (requires installing software to glasses)
+
+[x] Screen subsection selector overlay for screen mirroring to choose what portion of screen is mirrored
 
 [-] Weather (mocked up - returning fixed values, no integration with external services yet)
 

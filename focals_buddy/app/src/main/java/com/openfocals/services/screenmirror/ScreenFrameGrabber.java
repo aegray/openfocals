@@ -2,6 +2,7 @@ package com.openfocals.services.screenmirror;
 
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -13,19 +14,15 @@ import android.os.HandlerThread;
 import android.util.Base64;
 import android.util.Log;
 
+import com.openfocals.services.DeviceService;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
 
 
-
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft_17;
-import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.IOException;
 
@@ -38,6 +35,9 @@ public class ScreenFrameGrabber {
 
     ////////////////////////////////////
     //
+    private static final int RECHECK_MS = 50;
+    private static final int MIN_FRAME_GAP_MS = 0; //250;
+     
     private MediaProjection projection_;
     private VirtualDisplay display_;
     ImageReader imgreader_ = null;
@@ -51,6 +51,9 @@ public class ScreenFrameGrabber {
 
     OutputStream output_ = null; // = s.getOutputStream();
     boolean did_socket_ = false;
+    
+    long last_frame_ms_ = 0;
+    String pend_frame_;
 
 
     ScreenFrameListener listener_;
@@ -66,26 +69,19 @@ public class ScreenFrameGrabber {
                               final int density
     ) {
         projection_ = projection;
-//
-        //width_ = 220;
-        //height_ = 220;
-//        //height_ = 120; //220; //480;
-        //width_ = 640;
-        //height_ = 480;
-        //width_ = 100;//640;
-        //height_ = 120; //220; //480;
-        //height_ = 100; //220; //480;
-
 
         width_ = width;
         height_ = height;
         density_ = density;
-        //mDensity = density;
-        //fps = (_fps > 0 && _fps <= 30) ? _fps : FRAME_RATE;
-        //bitrate = (_bitrate > 0) ? _bitrate : calcBitRate(_fps);
         final HandlerThread thread = new HandlerThread(TAG);
         thread.start();
         handler_ = new Handler(thread.getLooper());
+        Rect f = DeviceService.getInstance().screen_cap_rect;
+
+        if (f == null)
+        {
+            DeviceService.getInstance().screen_cap_rect = new Rect(0, 0, 220, 220);
+        }
     }
 
 
@@ -98,7 +94,57 @@ public class ScreenFrameGrabber {
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 imgreader_.getSurface(), null, handler_);
         imgreader_.setOnImageAvailableListener(new ImageAvailableListener(), handler_); //null);
+
+
+        // Frame delay in push model (currently disabled)
+        //if (MIN_FRAME_GAP_MS != 0) {
+        //    handler_.postDelayed(
+        //            new Runnable() {
+        //                public void run() {
+        //                    checkSendFrame();
+        //                }
+        //            }, RECHECK_MS);
+        //}
+
     }
+
+    public void stop()
+    {
+        started = false;
+    }
+
+    void checkSendFrame()
+    {
+        if (!started) return;
+
+        if (pend_frame_ != null)
+        {
+            long curms = System.currentTimeMillis();
+            if ((curms - last_frame_ms_) >= MIN_FRAME_GAP_MS)
+            {
+                if (listener_ != null) {
+                    Log.i(TAG, "Sending pended frame");
+                    listener_.onFrameData(pend_frame_);
+
+                }
+                pend_frame_ = null;
+                last_frame_ms_ = curms;
+            }
+            else {
+                Log.i(TAG, "Pended frame is still too early - waiting");
+            }
+
+        }
+        
+        handler_.postDelayed(
+                    new Runnable() {
+                        public void run() {
+                            checkSendFrame();
+                        }
+                    }, RECHECK_MS);
+    }
+
+
 
     public static class AndroidBmpUtil {
 
@@ -116,12 +162,6 @@ public class ScreenFrameGrabber {
             if(orgBitmap == null){
                 return null;
             }
-
-            //if(filePath == null){
-                //return false;
-            //}
-
-            boolean isSaveSuccess = true;
 
             //image size
             int width = orgBitmap.getWidth();
@@ -230,13 +270,8 @@ public class ScreenFrameGrabber {
                 startPosition = startPosition - col;
             }
 
-            //FileOutputStream fos = new FileOutputStream(filePath);
-            //fos.write(buffer.array());
-            //fos.close();
-            //Log.v("AndroidBmpUtil" ,System.currentTimeMillis()-start+" ms");
 
             return buffer;
-            //isSaveSuccess;
         }
 
         /**
@@ -274,42 +309,6 @@ public class ScreenFrameGrabber {
 
 
     private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
-        private WebSocketClient mWebSocketClient = null;
-        private boolean connected_ = false;
-        public void setup() {
-            URI uri;
-            try {
-                uri = new URI("ws://192.168.1.15:59423");
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                return;
-            }
-            mWebSocketClient = new WebSocketClient(uri, new Draft_17()) {
-                @Override
-                public void onOpen(ServerHandshake serverHandshake) {
-                    Log.i(TAG, "WEBSOCKET CONNECTED");
-                    //Logger.LogInfo("Websocket", "Opened");
-                    connected_ = true;
-                }
-                @Override
-                public void onMessage(String s) {
-                    //final String message = s;
-                }
-                @Override
-                public void onClose(int i, String s, boolean b) {
-                    Log.i(TAG, "WEBSOCKET CLOSED");
-                    //Logger.LogInfo("Websocket", "Closed " + s);
-                    connected_ = false;
-                }
-                @Override
-                public void onError(Exception e) {
-                    Log.i(TAG, "WEBSOCKET ERROR");
-                    connected_ = false;
-                    //Logger.LogInfo("Websocket", "Error " + e.getMessage());
-                }
-            };
-            mWebSocketClient.connect();
-        }
 
         @Override
         public void onImageAvailable(ImageReader reader) {
@@ -335,77 +334,64 @@ public class ScreenFrameGrabber {
                     bitmap.copyPixelsFromBuffer(buffer);
                     stream = new ByteArrayOutputStream();
 
+                    Rect f = DeviceService.getInstance().screen_cap_rect;
+                    if (f == null) {
+                        image.close();
+                        return;
+                    }
+                    int usewidth = Math.min(f.width(), bitmap.getWidth() - f.left);
+                    int useheight = Math.min(f.height(), bitmap.getHeight() - f.top);
 
+                    if ((useheight <= 0) || (usewidth <= 0))
+                    {
+                        image.close();
+                        return;
+                    }
 
-                    Bitmap b2 = Bitmap.createBitmap(bitmap, 90, 0, 220, 220);
-                    //bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
-                    //b2.compress(Bitmap.CompressFormat.JPEG, 50, stream);
-                    b2.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+                    Bitmap b2 = Bitmap.createBitmap(bitmap, f.left, f.top, usewidth, useheight);
+                    Bitmap b3 = Bitmap.createScaledBitmap(b2, 220, 220, true);
 
+                    b3.compress(Bitmap.CompressFormat.JPEG, 80, stream);
 
                     byte[] data = stream.toByteArray();
+
+                    // FOR BMP version
                     //byte[] data = AndroidBmpUtil.getbmp(bitmap).array();
 
                     image.close();
 
 
+                    // pushing frames doesn't work - the bluetooth sometimes gets too backed up
+                    // so i switched to a pull model (we set the last frame, then when receiving
+                    // a message from the glasses, we publish back the latest frame.
+
+                    // I'm leaving in the code to pause between frames in case I ever want to switch
+                    // back to a push method
+                    long curms = System.currentTimeMillis();
+                    //if ((MIN_FRAME_GAP_MS == 0) || ((curms - last_frame_ms_) >= MIN_FRAME_GAP_MS))
+                    //{
                     if (listener_ != null)
                     {
-                        //listner_.onFrameData(data);
-                        //listener_.onFrameData("data:image/x-ms-bmp;base64," + Base64.encodeToString(data, Base64.DEFAULT));
+                        Log.i(TAG, "SENDING FRAME");
                         listener_.onFrameData("data:image/jpeg;base64," + Base64.encodeToString(data, Base64.DEFAULT));
-                        //stream.toByteArray(), Base64.DEFAULT));
-
                     }
+                    last_frame_ms_ = curms;
+                    //}
+                    //else
+                    //{
+                    //    Log.i(TAG, "PENDING FRAME FOR LATER");
+                    //    pend_frame_ = "data:image/jpeg;base64," + Base64.encodeToString(data, Base64.DEFAULT);
+                    //}
 
-//
-//                    if (mWebSocketClient == null)
-//                    {
-//                        setup();
-//                    }
-//                    else
-//                    {
-//                        if (connected_) {
-//                            mWebSocketClient.send("data:image/x-ms-bmp;base64," + Base64.encodeToString(data, Base64.DEFAULT));
-//
-//                            Log.i(TAG, "SENDING FRAME");
-//                            //mWebSocketClient.send("data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT));
-//                            //mWebSocketClient.send("data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT));
-//                        }
-//                    }
-//                    if (!did_socket_) {
-//                        try {
-//                            socket_ = new Socket("192.168.1.11", 54323); //"xxx.xxx.xxx.xxx", 9002);
-//                            //OutputStream out = socket_.getOutputStream();
-//                            output_ = socket_.getOutputStream();
-//                            //output_ = new PrintWriter(out);
-//                            output_.write(stream.toByteArray()); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                            output_ = null;
-//                            socket_.close();
-//                            did_socket_ = true;
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//
-//                    if (output_ != null) {
-//                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        output_.write(stream.toByteArray()); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                        output_ = null;
-//                        socket_.close();
-//                    }
-
-                    //output.println("FROM SERVER - " + stringData.toUpperCase());
+                    //if (listener_ != null)
+                    //{
+                    //    //listner_.onFrameData(data);
+                    //    //listener_.onFrameData("data:image/x-ms-bmp;base64," + Base64.encodeToString(data, Base64.DEFAULT));
+                    //    listener_.onFrameData("data:image/jpeg;base64," + Base64.encodeToString(data, Base64.DEFAULT));
+                    //    //stream.toByteArray(), Base64.DEFAULT));
+                    //}
 
 
-                    //StringBuilder sb = new StringBuilder();
-                    //sb.append("data:image/png;base64,");
-                    //sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-                    //WebrtcClient.sendProjection(sb.toString());
                 }
 
 
@@ -417,127 +403,5 @@ public class ScreenFrameGrabber {
         }
     }
 
-//
-//    private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
-//
-//        //private WebSocketClient mWebSocketClient = null;
-//        private boolean connected_ = false;
-//
-//        public void setup() {
-//            URI uri;
-//            try {
-//                uri = new URI("ws://192.168.1.15:59423");
-//            } catch (URISyntaxException e) {
-//                e.printStackTrace();
-//                return;
-//            }
-//            mWebSocketClient = new WebSocketClient(uri, new Draft_17()) {
-//                @Override
-//                public void onOpen(ServerHandshake serverHandshake) {
-//                    Log.i(TAG, "WEBSOCKET CONNECTED");
-//                    //Logger.LogInfo("Websocket", "Opened");
-//                    connected_ = true;
-//                }
-//                @Override
-//                public void onMessage(String s) {
-//                    //final String message = s;
-//                }
-//                @Override
-//                public void onClose(int i, String s, boolean b) {
-//                    Log.i(TAG, "WEBSOCKET CLOSED");
-//                    //Logger.LogInfo("Websocket", "Closed " + s);
-//                    connected_ = false;
-//                }
-//                @Override
-//                public void onError(Exception e) {
-//                    Log.i(TAG, "WEBSOCKET ERROR");
-//                    connected_ = false;
-//                    //Logger.LogInfo("Websocket", "Error " + e.getMessage());
-//                }
-//            };
-//            mWebSocketClient.connect();
-//        }
-//        @Override
-//        public void onImageAvailable(ImageReader reader) {
-//            Image image = null;
-//            Bitmap bitmap = null;
-//
-//            ByteArrayOutputStream stream = null;
-//
-//            try {
-//                image = imgreader_.acquireLatestImage();
-//
-//                if (image != null) {
-//                    Image.Plane[] planes = image.getPlanes();
-//                    Log.i(TAG, "Got frame: " + image.getWidth() + " / " + image.getHeight());
-//                    ByteBuffer buffer = planes[0].getBuffer();
-//                    int pixelStride = planes[0].getPixelStride();
-//                    int rowStride = planes[0].getRowStride();
-//                    int rowPadding = rowStride - pixelStride * width_;
-//
-//                    //// create bitmap
-//                    bitmap = Bitmap.createBitmap(width_ + rowPadding / pixelStride,
-//                            height_, Bitmap.Config.ARGB_8888);
-//                    bitmap.copyPixelsFromBuffer(buffer);
-//                    stream = new ByteArrayOutputStream();
-//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
-//
-//
-//
-//                    image.close();
-//
-//                    if (mWebSocketClient == null)
-//                    {
-//                        setup();
-//                    }
-//                    else
-//                    {
-//                        if (connected_) {
-//                            mWebSocketClient.send("data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT));
-//                        }
-//                    }
-////                    if (!did_socket_) {
-////                        try {
-////                            socket_ = new Socket("192.168.1.11", 54323); //"xxx.xxx.xxx.xxx", 9002);
-////                            //OutputStream out = socket_.getOutputStream();
-////                            output_ = socket_.getOutputStream();
-////                            //output_ = new PrintWriter(out);
-////                            output_.write(stream.toByteArray()); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                            output_ = null;
-////                            socket_.close();
-////                            did_socket_ = true;
-////                        } catch (IOException e) {
-////                            e.printStackTrace();
-////                        }
-////                    }
-////
-////                    if (output_ != null) {
-////                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        //output_.write(0); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        output_.write(stream.toByteArray()); //print(sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-////                        output_ = null;
-////                        socket_.close();
-////                    }
-//
-//                    //output.println("FROM SERVER - " + stringData.toUpperCase());
-//
-//
-//                    //StringBuilder sb = new StringBuilder();
-//                    //sb.append("data:image/png;base64,");
-//                    //sb.append(StringUtils.newStringUtf8(Base64.encode(stream.toByteArray(), Base64.DEFAULT)));
-//                    //WebrtcClient.sendProjection(sb.toString());
-//                }
-//
-//
-//            } catch (Exception e) {
-//                Log.e(TAG, "ERROR: " + e.toString());
-//                e.printStackTrace();
-//            }
-//
-//        }
-//    }
 
 }

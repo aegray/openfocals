@@ -3,40 +3,17 @@ package com.openfocals.services.network;
 import android.util.Base64;
 import android.util.Log;
 
-import com.google.common.primitives.UnsignedLong;
 import com.openfocals.services.DeviceService;
-import com.openfocals.services.network.present.IPresenter;
-import com.openfocals.services.network.present.PresentationProvider;
-
-import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.EOFException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 
 import okio.Buffer;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-
-import android.util.Base64;
-import android.util.Log;
-
-import com.openfocals.services.network.InterceptedNetworkServiceManager;
 import com.openfocals.services.screenmirror.ScreenFrameListener;
 
-import org.apache.commons.text.StringEscapeUtils;
-
-import java.io.EOFException;
-import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-
-import okio.Buffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.InterceptedNetworkSessionFactory, ScreenFrameListener {
 
@@ -46,8 +23,10 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
 
     ScreenMirrorSession session_ = null;
 
+    String last_frame_ = null;
 
 
+    private final Object lock = new Object();
 
     static String getPacketData(Buffer b) {
         try {
@@ -90,10 +69,19 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
 
     @Override
     public void onFrameData(String data) {
-        if (session_ != null)
-        {
-            session_.send(data);
+
+        synchronized (lock) {
+            last_frame_ = data;
         }
+        if (session_ != null) {
+            session_.check_frame();
+        }
+
+        // for push mode (didn't work/ was getting backed up)
+        //if (session_ != null)
+        //{
+        //    session_.send(data);
+        //}
     }
 
 
@@ -102,11 +90,36 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
     {
 
         boolean connected_ = false;
+
+        boolean need_frame_ = false;
+
+
+
+
+
         // callbacks
         public void onOpen() {
             Log.i(TAG, "Screen mirror ws session open (onOpen)");
+            connected_ = false;
         }
 
+        public void check_frame() {
+            synchronized (lock) {
+                if (need_frame_ && connected_ && (last_frame_ != null)) {
+                    sendFrame();
+                }
+            }
+        }
+
+        public void sendFrame() {
+            if (last_frame_ != null) {
+
+                Log.i(TAG, "Sending frame size=" + last_frame_.length());
+                send(last_frame_);
+                last_frame_ = null;
+                need_frame_ = false;
+            }
+        }
 
         void writeWebsocketData(String data) {
             Buffer bout = new Buffer();
@@ -137,21 +150,12 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
 
 
 
-                //bytesFormatted[2] = ( bytesRaw.length >> 56 ) AND 255
-                //bytesFormatted[3] = ( bytesRaw.length >> 48 ) AND 255
-                //bytesFormatted[4] = ( bytesRaw.length >> 40 ) AND 255
-                //bytesFormatted[5] = ( bytesRaw.length >> 32 ) AND 255
-                //bytesFormatted[6] = ( bytesRaw.length >> 24 ) AND 255
-                //bytesFormatted[7] = ( bytesRaw.length >> 16 ) AND 255
-                //bytesFormatted[8] = ( bytesRaw.length >>  8 ) AND 255
-                //bytesFormatted[9] = ( bytesRaw.length       ) AND 255
 
             } else {
                 Log.e(TAG, "Couldn't send message - too long: " + data.length());
                 return;
             }
 
-            Log.d(TAG, "Sending ws data raw to focals: " + bout.size() + ": " + bout.clone().readString(UTF_8));
             sendData(bout);
         }
 
@@ -204,12 +208,10 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
             bout.writeByte(13); bout.writeByte(10);
             bout.writeByte(13); bout.writeByte(10);
 
-            //Log.i(TAG, "Using websocket keys: in=" + key + " out=" + srespkey);
 
             sendData(bout);
 
             connected_ = true;
-            //writeWebsocketData("{\"type\": \"connected\"}");
 
             Log.i(TAG, "Screeen mirror websocket session started");
             ScreenMirrorWSService.this.session_ = this;
@@ -217,7 +219,11 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
 
         private void handleWebsocketData(Buffer b) {
             String s = getPacketData(b);
-            Log.i(TAG, "Got command data from glasses: " + s);
+            //Log.i(TAG, "Got command data from glasses: " + s);
+
+
+            need_frame_ = true;
+            check_frame();
 
            // if (s.contains("next_slide")) {
            //     provider_.onNext();
@@ -228,7 +234,6 @@ public class ScreenMirrorWSService implements InterceptedNetworkServiceManager.I
 
 
         public void onData(Buffer b) {
-            Log.i(TAG, "Presenter got data: " + b.clone().readUtf8());
 
             if (connected_) {
                 handleWebsocketData(b);
