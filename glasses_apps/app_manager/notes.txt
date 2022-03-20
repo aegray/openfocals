@@ -1,0 +1,12 @@
+adb shell
+    > mount -o rw,remount /system
+
+adb push app_manager /system/bin/app_manager
+
+
+adb shell
+
+vi /etc/init/init.demo_notes.rc
+
+make new entry that is clone of demo notes, but change all names to app_manager instead of demo_notes
+
