@@ -1,11 +1,6 @@
 
 # Design
 
-## Event bus
-All different parts of the system are linked together using an EventBus (the greenrobot library provides this).  
-This lets different subcomponents operate semi independently without knowledge of what they'll be
-linked to by pushing various messages onto a global event bus, and listening to the event bus
-for messages from other components.
 
 
 ## Prerequisite info on focals
@@ -41,6 +36,14 @@ also an http endpoint handler to register various http hosts/websites.
 
 The frontend application starts up a service which manages all of these things, then controls
 commands and settings that are sent to this service.  
+
+
+## Event bus
+
+All different parts of the system are linked together using an EventBus (the greenrobot library provides this).  
+This lets different subcomponents operate semi independently without knowledge of what they'll be
+linked to by pushing various messages onto a global event bus, and listening to the event bus
+for messages from other components.
 
 
 ## Device + Device service
