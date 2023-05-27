@@ -25,9 +25,10 @@ does a standard ssl handshake, provides certificates, decrypts incoming data and
 data sent from internal services in response to these requsts.  
 
 To support ssl decryption/encryption, On connecting to the glasses, the app sends a command to 
-tell the glasses to use a different address than the default one for North's cloud service 
-- ofocals.com (a domain I own in order to get an ssl certificate issued) - and uses the 
-certificate I have for this domain in order to serve cloud requests from the glasses.  
+tell the glasses to use a different address than the default one for North's cloud service.  This 
+address is ofocals.com (a domain I own in order to get an ssl certificate issued) - and uses the 
+certificate I have for this domain in order to serve cloud requests from the glasses (This 
+certificate may periodically need to be updated in the app).
 
 Internally, the service has a registration mechanism for different types of socket + web services.
 The cloud mock service provides an ssl webserver and serves requests which were intended for cloud.
@@ -82,7 +83,7 @@ if it should show a dialog to setup / login to alexa)
 * a class/subservice to intercept attempts to connect to North's cloud webserver and acts as a fake
 cloud webserver (serving various standard pages that the glasses may request - for example to 
 send notes, tasks, weather). 
-(through focals_buddy/app/src/main/java/com/openfocals/services/network/cloudintercept/CloudMockService.java)
+(through focals_buddy/app/src/main/java/com/openfocals/services/network/cloudintercept/ClloudMockService.java)
 
 * a mock location service which sends a hardcoded location to the glasses whenever the 
 glasses connect.  I forget why this was needed - it may have been an experiment or it may have 
@@ -144,6 +145,119 @@ use a voice to text model to stream audio subtitles to the glasses
 enabled, listens to image captures of the phone screen and forwards those on the event bus, in order 
 to provide screen mirroring to the glasses/custom app.
 (through focals_buddy/app/src/main/java/com/openfocals/services/screenmirror/ScreenFrameListener.java)
+
+
+## Network Service
+
+The network service monitors the event bus for bluetooth messages from the glasses related to 
+network/socket requests.  Internally this has two subcomponents - a NetworkSocketManager (which 
+handles actual external network connections) and an InterceptedNetworkServiceManager (which 
+handles mocked network connections that will actually be responded to by the app pretending to 
+be an external server).  
+
+For exach request from the glasses, we first check if the InterceptedNetworkServiceManager wants
+to handle the request, then if it doesn't, we pass the request on to the NetworkSocketManager.
+
+
+The following commands may come in from the glasses:
+
+* HostWhois - requesting an ip address for a given host.  To facilitate intercepting network 
+traffic, the InterceptedNetworkServiceManager may provide manual internal ip addresses which it 
+tracks for a subset of domains - so that when it seems further requests to these addresses, it 
+knows it should handle them.
+
+* SocketOpen - a request to open a new socket connection to a given ip
+
+* SocketClose - a request to close an existing socket connection
+
+* SocketError - a request to reset a socket connection
+
+* SocketData - a request to send some data on the socket connection
+
+
+Each open socket connection is labelled with an incrementing id so that the glasses can refer to 
+an open connection by id.
+
+The NetworkSocketManager is relatively straightforward - managing a set of external socket 
+connections to remote sites and feeding data back and forth to the glasses.
+
+The InterceptedNetworkServiceManager is more interesting and tracks:
+* domain name to ip remappings, for serving fake or remapped whois information to the glasses
+
+* created/open "internal" intercepted socket connections - basically socket connections the glasses
+requested that we open and are being handled internally by some subcomponent.  The base class for
+this is InterceptedNetworkServiceManager.InterceptedNetworkSession - and other components implement
+their own custom sessions by overriding the onOpen, onData, onError, and onClose methods of these.
+
+* ip address to InterceptedNetworkSessionFactory mappings - mapping which subcomponent should 
+handle creating InterceptedNetworkSessions for different ip addresses.
+
+The InterceptedNetworkServiceManager doesn't register any default services - but provides methods
+to register new domain remappings (registerRemapping) and new services (registerServiceForIP and 
+registerServiceForDomain)
+
+
+### Presentation intercept
+Probably the simplest service is the PresentationInterceptService 
+(focals_buddy/app/src/main/java/com/openfocals/services/network/present/PresentationInterceptService.java)
+
+This provides an InterceptedNetworkSessionFactory which creates sessions for new connections destined
+for a presentation site (something on herokuapp).  These sessions do the following:
+* Wait for an initial http request coming from the glasses - this http request is expected to be
+a request to switch to a websocket protocol.  The request also specifies the code that was typed
+in the glasses (I think it's a 3 character code each comprised of A-F)
+
+* Once that request is received, sends back the necessary data to tell the glasses they're now 
+communicating through the websocket protocol.  It also looks up what sub providers we have registered
+for the provided code and instantiates one of them (provided we have one) - which will then handle
+providing the actual slide/text content going forward
+
+* Send an initial json message through the websocket indicating the glasses are connected
+
+* Handle incoming json commands from the glasses to go to the next or previous slide
+
+* Handle feeding data from the chosen sub provider to the glasses
+
+Each subprovider inherits from PresentationProvider 
+(/focals_buddy/app/src/main/java/com/openfocals/services/network/present/PresentationProvider.java)
+and can implement the onNext, onPrevious (which are called when the glasses request a new slide),
+resetPresentation() which is called on initial startup of a connection, and onClose when the 
+connection is closed.  Additionally the subprovider may call sendCard(string_text) at any time, 
+possibly from another thread, which can allow you to stream changing text to the glasses screen
+rather than having to wait for a next/previous slide command.
+
+### Cloud mock
+The cloud mock service (focals_buddy/app/src/main/java/com/openfocals/services/network/cloudintercept/CloudMockService.java)
+is a bit more complicated.  It intercepts https requests to the registered cloud address (cloud.ofocals.com),
+handles decryption/encryption of the ssl connection, and provides an http endpoint handler 
+to handle different web requests (For example get /v1/device/companions).  
+
+Similar to the presentation intercept, the cloud mock service implements an InterceptedNetworkSessionFactory
+which can create new socket sessions (CloudMockService.InterceptedCloudSSLSession).
+
+Internal to each session is an instance of SSLServerDataHandler 
+(focals_buddy/app/src/main/java/com/openfocals/commutils/ssl/SSLServerDataHandler.java) which 
+handles the initial ssl handshake, decrypts incoming data and encrypts outgoing data.  There is also
+an HTTPEndpointHandler session - which handles the plaintext http requests after decryption.
+
+All data received from the glasses is fed to this ssl handler, then the resulting output data 
+is fed to the http request handler.
+
+The CloudMockService registers several default http endpoints which the glasses expects:
+* /v1/device/companions which is and endpoint meant for the glasses to register that they're active
+
+* /v1/device which is meant to provide device information 
+
+* /v1/messenger/user which provides user information for the messaging app
+
+* /v1/feature-manager/user which provides a list of features available 
+
+It also holds a handle to a CloudIntegrationHandler 
+(focals_buddy/app/src/main/java/com/openfocals/services/network/cloudintercept/CloudIntegrationHandler.java)
+which manages further registration of cloud integrations (for example notes, tasks, etc).  
+
+
+
 
 
 
